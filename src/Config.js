@@ -74,11 +74,11 @@ var Config = {
         labelLength: 34,
         imageWidth: 128,
         imageHeight: 128,
-        model: '/models/model_resnet_with_condition_128_full_1',
-        modelServers: debug ? ['localhost:3000'] : ['139.162.88.6']
+        model: '/models/model_resnet_with_condition_128_full_1_8bit',
+        modelServers: debug ? ['localhost:3000'] : ['153.126.160.122']
     },
     stat: {
-        enabled: true,
+        enabled: false,
         urlPrefix: (debug ? 'http://localhost:6253' : '') + '/api/stat'
     },
     twitter: {
