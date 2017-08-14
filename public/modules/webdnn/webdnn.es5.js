@@ -106,10 +106,10 @@ var WebDNN;
             // Object => deep copy
             return Object.entries(placeholder)
                 .reduce(function (result, _a) {
-                var key = _a[0], value = _a[1];
-                result[key] = _this.resolve(value);
-                return result;
-            }, {});
+                    var key = _a[0], value = _a[1];
+                    result[key] = _this.resolve(value);
+                    return result;
+                }, {});
         };
         PlaceholderContext.prototype.toString = function () {
             return JSON.stringify(this.values);
@@ -357,9 +357,9 @@ var WebDNN;
             return __awaiter(this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: 
-                        // if the user awaits promise from final kernel execution, this function call is not needed.
-                        return [4 /*yield*/, BufferWebGPU.webgpuHandler.sync()];
+                        case 0:
+                            // if the user awaits promise from final kernel execution, this function call is not needed.
+                            return [4 /*yield*/, BufferWebGPU.webgpuHandler.sync()];
                         case 1:
                             // if the user awaits promise from final kernel execution, this function call is not needed.
                             _a.sent();
@@ -657,7 +657,7 @@ var WebDNN;
      * @param init.ignoreCache If true, cache is ignored by appending '?t=(timestamp)' to the end of request url.
      * @returns Response
      */
-    function fetch(input, init, callback) {
+    function fetch(input, init) {
         return __awaiter(this, void 0, void 0, function () {
             var res;
             return __generator(this, function (_a) {
@@ -671,17 +671,7 @@ var WebDNN;
                                 url: transformUrl(input.url) + ((init && init.ignoreCache) ? '?t=' + Date.now() : '')
                             });
                         }
-                        if (callback && WebDNN.isXHR2WithArrayBufferSupported()) {
-                            return [4 /*yield*/, WebDNN.fetchUsingXHR(input, callback).then(function (arrayBuffer) {
-                                return {
-                                    ok: true,
-                                    arrayBuffer: function() { return Promise.resolve(arrayBuffer); }
-                                };
-                            })];
-                        }
-                        else {
-                            return [4 /*yield*/, fetchDelegate(input, init)];
-                        }
+                        return [4 /*yield*/, fetchDelegate(input, init)];
                     case 1:
                         res = _a.sent();
                         if (!res.ok)
@@ -699,10 +689,8 @@ var WebDNN;
      * @returns ArrayBuffer
      */
     function readArrayBufferProgressively(res, callback) {
-        if (!callback || !res.body) {
+        if (!callback || !res.body)
             return res.arrayBuffer();
-        }
-
         var contentLength = res.headers.get('Content-Length');
         if (!contentLength)
             return res.arrayBuffer();
@@ -728,52 +716,6 @@ var WebDNN;
         return reader.read().then(accumulateLoadedSize);
     }
     WebDNN.readArrayBufferProgressively = readArrayBufferProgressively;
-    function isXHR2WithArrayBufferSupported() {
-        if (!window.ProgressEvent || ! window.FormData) {
-            return false;
-        }
-
-        var xhr = new XMLHttpRequest();
-
-        if (typeof xhr.responseType === 'string') {
-            try {
-                xhr.responseType = 'arraybuffer';
-                return xhr.responseType === 'arraybuffer';
-            } catch (e) {
-                return false;
-            }
-        }
-        else {
-            return false;
-        }
-    }
-    WebDNN.isXHR2WithArrayBufferSupported = isXHR2WithArrayBufferSupported;
-    function fetchUsingXHR(url, callback) {
-        return new Promise(function (resolve, reject) {
-            var oReq = new XMLHttpRequest();
-            oReq.open("GET", url, true);
-            oReq.responseType = "arraybuffer";
-            var callbackScheduler = new WebDNN.util.DispatchScheduler();
-
-            oReq.onload = function (oEvent) {
-                callbackScheduler.forceDispatch();
-                resolve(oReq.response);
-            };
-
-            oReq.onprogress = function (oEvent) {
-                if (callback) {
-                    callbackScheduler.request(function () { return callback(oEvent.loaded, oEvent.total); });
-                }
-            };
-
-            oReq.onerror = function (oEvent) {
-                reject(oEvent);
-            };
-
-            oReq.send(null);
-        });
-    }
-    WebDNN.fetchUsingXHR = fetchUsingXHR;
 })(WebDNN || (WebDNN = {}));
 /// <reference path="./graph_descriptor.ts" />
 /// <reference path="../buffer/buffer_webgpu.ts" />
@@ -819,17 +761,17 @@ var WebDNN;
         DescriptorRunnerWebGPU.prototype.initializeBasicKernels = function () {
             this.webgpuHandler.loadKernel('kernel void sync(){}', 'basic');
         };
-        DescriptorRunnerWebGPU.prototype.load = function (directory, progressCallback, weightDirectory) {
+        DescriptorRunnerWebGPU.prototype.load = function (directory, progressCallback) {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, descriptor, weightRawArray;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0: return [4 /*yield*/, Promise.all([
-                                WebDNN.fetch(directory + "/graph_" + this.backendName + ".json", { ignoreCache: this.ignoreCache })
-                                    .then(function (res) { return res.json(); }),
-                                WebDNN.fetch((weightDirectory || directory) + "/weight_" + this.backendName + ".bin", { ignoreCache: this.ignoreCache }, progressCallback)
-                                    .then(function (res) { return WebDNN.readArrayBufferProgressively(res, progressCallback); })
-                            ])];
+                            WebDNN.fetch(directory + "/graph_" + this.backendName + ".json", { ignoreCache: this.ignoreCache })
+                                .then(function (res) { return res.json(); }),
+                            WebDNN.fetch(directory + "/weight_" + this.backendName + ".bin", { ignoreCache: this.ignoreCache })
+                                .then(function (res) { return WebDNN.readArrayBufferProgressively(res, progressCallback); })
+                        ])];
                         case 1:
                             _a = _b.sent(), descriptor = _a[0], weightRawArray = _a[1];
                             return [4 /*yield*/, this.setDescriptor(descriptor)];
@@ -845,8 +787,8 @@ var WebDNN;
                         case 5:
                             _b.sent();
                             return [4 /*yield*/, this.setPlaceholderValue({
-                                    '__MAX_THREADS_PER_THREADGROUP__': IS_IOS ? 512 : 512
-                                })];
+                                '__MAX_THREADS_PER_THREADGROUP__': IS_IOS ? 512 : 512
+                            })];
                         case 6:
                             _b.sent();
                             if (!(this.placeholderContext && this.placeholderContext.isResolved)) return [3 /*break*/, 8];
@@ -902,18 +844,18 @@ var WebDNN;
                                 throw Error("GraphDescriptor is not loaded.");
                             _a = this;
                             return [4 /*yield*/, Promise.all(this.descriptor.exec_infos.map(function (executionInfo) { return __awaiter(_this, void 0, void 0, function () {
-                                    var buffer;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                buffer = new WebDNN.BufferWebGPU(executionInfo.meta_buffer.length * Int32Array.BYTES_PER_ELEMENT);
-                                                return [4 /*yield*/, buffer.write(new Uint8Array(executionInfo.meta_buffer))];
-                                            case 1:
-                                                _a.sent();
-                                                return [2 /*return*/, buffer];
-                                        }
-                                    });
-                                }); }))];
+                                var buffer;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            buffer = new WebDNN.BufferWebGPU(executionInfo.meta_buffer.length * Int32Array.BYTES_PER_ELEMENT);
+                                            return [4 /*yield*/, buffer.write(new Uint8Array(executionInfo.meta_buffer))];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/, buffer];
+                                    }
+                                });
+                            }); }))];
                         case 1:
                             _a.metaBuffers = _b.sent();
                             return [2 /*return*/];
@@ -1000,16 +942,16 @@ var WebDNN;
                             // resolve placeholders in execution info
                             _a = this;
                             return [4 /*yield*/, Promise.all(descriptor.exec_infos.map(function (executionInfo, i) { return __awaiter(_this, void 0, void 0, function () {
-                                    var bufferView, _i, _a, unresolved_value;
-                                    return __generator(this, function (_b) {
-                                        bufferView = new Int32Array(metaBuffers[i].bufferView.buffer);
-                                        for (_i = 0, _a = executionInfo.unresolved_value_list; _i < _a.length; _i++) {
-                                            unresolved_value = _a[_i];
-                                            bufferView[unresolved_value.offset] = placeholderContext.resolve(unresolved_value.placeholder);
-                                        }
-                                        return [2 /*return*/, placeholderContext.resolve(executionInfo)];
-                                    });
-                                }); }))];
+                                var bufferView, _i, _a, unresolved_value;
+                                return __generator(this, function (_b) {
+                                    bufferView = new Int32Array(metaBuffers[i].bufferView.buffer);
+                                    for (_i = 0, _a = executionInfo.unresolved_value_list; _i < _a.length; _i++) {
+                                        unresolved_value = _a[_i];
+                                        bufferView[unresolved_value.offset] = placeholderContext.resolve(unresolved_value.placeholder);
+                                    }
+                                    return [2 /*return*/, placeholderContext.resolve(executionInfo)];
+                                });
+                            }); }))];
                         case 2:
                             // resolve placeholders in execution info
                             _a.executionInfos = _b.sent();
@@ -1164,7 +1106,7 @@ var WebDNN;
             //nothing to do
             return Promise.resolve();
         };
-        DescriptorRunnerWebassembly.prototype.load = function (directory, progressCallback, weightDirectory) {
+        DescriptorRunnerWebassembly.prototype.load = function (directory, progressCallback) {
             return __awaiter(this, void 0, void 0, function () {
                 var graph_url, graph_fetch, _a, kernel_backend, worker_entry_js_path, weight_url, weight_fetch, weights_data_ab;
                 return __generator(this, function (_b) {
@@ -1189,8 +1131,8 @@ var WebDNN;
                             return [4 /*yield*/, this.compile()];
                         case 3:
                             _b.sent();
-                            weight_url = (weightDirectory || directory) + "/weight_" + this.backendName + ".bin";
-                            return [4 /*yield*/, WebDNN.fetch(weight_url, { ignoreCache: this.ignoreCache }, progressCallback)];
+                            weight_url = directory + "/weight_" + this.backendName + ".bin";
+                            return [4 /*yield*/, WebDNN.fetch(weight_url, { ignoreCache: this.ignoreCache })];
                         case 4:
                             weight_fetch = _b.sent();
                             return [4 /*yield*/, WebDNN.readArrayBufferProgressively(weight_fetch, progressCallback)];
@@ -1478,17 +1420,17 @@ var WebDNN;
                 });
             });
         };
-        DescriptorRunnerFallback.prototype.load = function (directory, progressCallback, weightDirectory) {
+        DescriptorRunnerFallback.prototype.load = function (directory, progressCallback) {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, descriptor, weightRawArray;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0: return [4 /*yield*/, Promise.all([
-                                WebDNN.fetch(directory + "/graph_" + this.backendName + ".json", { ignoreCache: this.ignoreCache })
-                                    .then(function (res) { return res.json(); }),
-                                WebDNN.fetch((weightDirectory || directory) + "/weight_" + this.backendName + ".bin", { ignoreCache: this.ignoreCache }, progressCallback)
-                                    .then(function (res) { return WebDNN.readArrayBufferProgressively(res, progressCallback); })
-                            ])];
+                            WebDNN.fetch(directory + "/graph_" + this.backendName + ".json", { ignoreCache: this.ignoreCache })
+                                .then(function (res) { return res.json(); }),
+                            WebDNN.fetch(directory + "/weight_" + this.backendName + ".bin", { ignoreCache: this.ignoreCache })
+                                .then(function (res) { return WebDNN.readArrayBufferProgressively(res, progressCallback); })
+                        ])];
                         case 1:
                             _a = _b.sent(), descriptor = _a[0], weightRawArray = _a[1];
                             this.setDescriptor(descriptor);
@@ -1548,9 +1490,9 @@ var WebDNN;
                             this.variableMap = variableMap;
                             Object.entries(descriptor.memory_layout.static.allocations)
                                 .forEach(function (_a) {
-                                var name = _a[0], allocation = _a[1];
-                                variableMap.set(name, new Float32Array(staticBuffer.buffer, allocation.offset * Float32Array.BYTES_PER_ELEMENT, allocation.size));
-                            });
+                                    var name = _a[0], allocation = _a[1];
+                                    variableMap.set(name, new Float32Array(staticBuffer.buffer, allocation.offset * Float32Array.BYTES_PER_ELEMENT, allocation.size));
+                                });
                             decoder = WebDNN.get_weight_decoder(this.descriptor.weight_encoding);
                             _b = (_a = staticBuffer).set;
                             return [4 /*yield*/, decoder.decode(new Uint8Array(weightRawArray), this.descriptor.memory_layout)];
@@ -1589,9 +1531,9 @@ var WebDNN;
                             this.variableMap = variableMap;
                             Object.entries(descriptor.memory_layout.dynamic.allocations)
                                 .forEach(function (_a) {
-                                var name = _a[0], allocation = _a[1];
-                                variableMap.set(name, new Float32Array(dynamicBuffer.buffer, placeholderContext.resolve(allocation.offset) * Float32Array.BYTES_PER_ELEMENT, placeholderContext.resolve(allocation.size)));
-                            });
+                                    var name = _a[0], allocation = _a[1];
+                                    variableMap.set(name, new Float32Array(dynamicBuffer.buffer, placeholderContext.resolve(allocation.offset) * Float32Array.BYTES_PER_ELEMENT, placeholderContext.resolve(allocation.size)));
+                                });
                             return [4 /*yield*/, this.getInputViews()];
                         case 1:
                             (_a.sent())
@@ -1793,7 +1735,7 @@ var WebDNN;
                         _a.label = 3;
                     case 3:
                         _a.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, runner.load(directory, initOption.progressCallback, initOption.weightDirectory)];
+                        return [4 /*yield*/, runner.load(directory, initOption.progressCallback)];
                     case 4:
                         _a.sent();
                         return [3 /*break*/, 6];
