@@ -13,7 +13,6 @@ import GAN from '../utils/GAN';
 import Utils from '../utils/Utils';
 import Stat from '../utils/Stat';
 import ImageEncoder from '../utils/ImageEncoder';
-import Twitter from '../utils/Twitter';
 import './Home.css';
 
 class Home extends Component {
@@ -32,9 +31,6 @@ class Home extends Component {
                 amount: 1
             },
             results: [],
-            twitter: {
-                visible: false
-            },
             rating: 0,
             mode: 'normal'
         };
@@ -56,7 +52,6 @@ class Home extends Component {
 
     async componentDidMount() {
         Stat.init({cellularData: Utils.usingCellularData()});
-        this.showTwitterTimeline();
 
         if (Utils.usingCellularData()) {
             try {
@@ -81,24 +76,6 @@ class Home extends Component {
 
         Stat.modelLoaded(loadTime);
         this.setState({gan: {isReady: true}});
-    }
-
-    showTwitterTimeline() {
-        window.twttr.ready(() => {
-            window.twttr.widgets.createTimeline(
-                "897941606237704192",
-                document.getElementById("twitter-timeline-container"),
-                {
-                    height: 600,
-                    chrome: "noheader"
-                }
-            ).then(() =>{
-                this.setState({twitter: Object.assign({}, this.state.twitter, {visible: true})});
-                if (this.props.onTimelineLoad) {
-                    this.props.onTimelineLoad();
-                }
-            });
-        });
     }
 
     getRandomOptionValues(originalOptionInputs) {
@@ -213,12 +190,6 @@ class Home extends Component {
         }
     }
 
-    shareOnTwitter() {
-        localStorage['twitter_image'] = ImageEncoder.encode(this.state.results.slice(-1)[0]);
-        localStorage['twitter_noise'] = ImageEncoder.encodeNoiseOrigin(this.state.gan.noiseOrigin);
-        var win = window.open(Twitter.getAuthUrl(), '_blank');
-        win.focus();
-    }
 
     submitRating(value) {
         Stat.rate(this.state.gan.input, value);
@@ -230,7 +201,7 @@ class Home extends Component {
             <div className="home">
 
                 <div className="row main-row">
-                    <div className={(this.state.twitter.visible ? 'col-lg-8 ' : '') + 'col-xs-12'}>
+                    <div className={'col-xs-12'}>
                         <div className="row progress-container">
                             <CSSTransitionGroup
                                 transitionName="progress-transition"
@@ -272,15 +243,6 @@ class Home extends Component {
                                     <Route path="/tips" component={Tips}/>
                                 </Switch>
 
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-lg-4 col-xs-12" style={{display: this.state.twitter.visible ? 'block' : 'none'}}>
-                        <div className="row twitter-timeline-row">
-                            <div className="col-xs-12">
-                                <h3 className="twitter-timeline-title" style={{color: Config.colors.theme}}>#MakeGirlsMoe on Twitter</h3>
-                                <div id="twitter-timeline-container" />
                             </div>
                         </div>
                     </div>

@@ -25,27 +25,6 @@ class Navbar extends Component {
                         </button>
                         <Link className="navbar-brand" to="/"><span style={{color: Config.colors.theme}}>MakeGirls.moe</span></Link>
                     </div>
-
-                    <div className="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                        <ul className="nav navbar-nav">
-                            {this.renderLink('Home', '/')}
-                            {this.renderLink('About', '/about')}
-                            {this.renderLink('News', '/news')}
-                            {this.renderLink('Tips', '/tips')}
-                            <li><a href="https://makegirlsmoe.github.io/" target="_blank" rel="noopener noreferrer">Official Blog</a></li>
-                            <li><a href="https://github.com/makegirlsmoe" target="_blank" rel="noopener noreferrer">Github</a></li>
-                        </ul>
-                        <ul className="nav navbar-nav navbar-right">
-                            <li>
-                                <a className="twitter-share-button"
-                                    href={"https://twitter.com/intent/tweet?"
-                                    + "text=" + encodeURIComponent(Config.twitter.defaultText.substring(0, Config.twitter.defaultText.indexOf('http')))
-                                    + "&url=" + encodeURIComponent(Config.twitter.defaultText.substring(Config.twitter.defaultText.indexOf('http')))}>
-                                    Tweet
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
             </nav>
         );

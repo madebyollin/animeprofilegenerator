@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import Navbar from './Navbar';
 import Home from './Home';
-import Stat from './Stat';
-import Twitter from './Twitter';
 import './App.css';
 
 class App extends Component {
@@ -21,8 +19,6 @@ class App extends Component {
                         <Route path="/(|about|news|tips)" render={() =>
                             <Home onTimelineLoad={() => this.onTimelineLoad()} />
                         }/>
-                        <Route path="/twitter" component={Twitter}/>
-                        <Route path="/stat" component={Stat}/>
                     </Switch>
                 </div>
             </div>
