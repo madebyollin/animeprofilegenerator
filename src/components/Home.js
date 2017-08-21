@@ -2,16 +2,12 @@ import React, { Component } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import { CSSTransitionGroup } from 'react-transition-group';
 import Config from '../Config';
-import About from './About';
-import News from './News';
-import Tips from './Tips';
 import ProgressBar from './ProgressBar';
 import Generator from './Generator';
 import Options from './Options';
 import PromptDialog from './PromptDialog';
 import GAN from '../utils/GAN';
 import Utils from '../utils/Utils';
-import Stat from '../utils/Stat';
 import ImageEncoder from '../utils/ImageEncoder';
 import './Home.css';
 
@@ -51,11 +47,20 @@ class Home extends Component {
     }
 
     async componentDidMount() {
-        Stat.init({cellularData: Utils.usingCellularData()});
 
         if (Utils.usingCellularData()) {
             try {
-                await this.dialog.show();
+                await this.cellularDialog.show();
+            }
+            catch (err) {
+                this.setState({gan: Object.assign({}, this.state.gan, {isCanceled: true})});
+                return;
+            }
+        }
+
+        if (!Utils.supportsWebGPU()) {
+            try {
+                await this.browserDialog.show();
             }
             catch (err) {
                 this.setState({gan: Object.assign({}, this.state.gan, {isCanceled: true})});
@@ -74,7 +79,6 @@ class Home extends Component {
             return;
         }
 
-        Stat.modelLoaded(loadTime);
         this.setState({gan: {isReady: true}});
     }
 
@@ -164,7 +168,6 @@ class Home extends Component {
             });
         }
 
-        //Stat.generate(this.state.options);
         this.setState({
             gan: Object.assign({}, this.state.gan, {isRunning: false}),
         });
@@ -192,7 +195,6 @@ class Home extends Component {
 
 
     submitRating(value) {
-        Stat.rate(this.state.gan.input, value);
         this.setState({rating: value});
     }
 
@@ -225,9 +227,6 @@ class Home extends Component {
                                 <Generator gan={this.state.gan}
                                            results={this.state.results}
                                            onGenerateClick={() => this.generate()}
-                                           onTwitterClick={() => this.shareOnTwitter()}
-                                           onRatingClick={(value) => this.submitRating(value)}
-                                           rating={this.state.rating}
                                 />
                             </div>
                             <div className="col-sm-9 col-xs-12 options-container">
@@ -238,9 +237,6 @@ class Home extends Component {
                                             inputs={this.state.options}
                                             onChange={(key, random, value) => this.onOptionChange(key, random, value)}/>
                                     } />
-                                    <Route path="/about" component={About}/>
-                                    <Route path="/news" component={News}/>
-                                    <Route path="/tips" component={Tips}/>
                                 </Switch>
 
                             </div>
@@ -250,10 +246,14 @@ class Home extends Component {
                 </div>
 
                 <PromptDialog
-                    ref={dialog => this.dialog = dialog}
-                    title="Note"
-                    message="You are using mobile data network. We strongly recommend you to connect to Wi-Fi when accessing this website. Are you sure to continue?" />
+                    ref={cellularDialog => this.cellularDialog = cellularDialog}
+                    title="Cellular Data Warning"
+                    message="You are using a mobile data network.  This site loads a large (4MB) model file. Are you sure to continue?" />
 
+                <PromptDialog
+                    ref={browserDialog => this.browserDialog = browserDialog}
+                    title="Browser Warning"
+                    message="This site will run substantially faster (~20x) in a browser that supports WebGPU.  We recommend using Safari Technical Preview on macOS, with WebGPU Enabled. Are you sure to continue?" />
             </div>
         );
     }

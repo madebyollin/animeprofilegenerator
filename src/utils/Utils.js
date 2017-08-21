@@ -51,6 +51,10 @@ class Utils {
         return false;
     }
 
+    static supportsWebGPU() {
+        return 'WebGPURenderingContext' in window;
+    }
+
     static sum(arr) {
         return arr.reduce((a, b) => a + b, 0);
     }
