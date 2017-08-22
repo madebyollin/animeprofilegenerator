@@ -1,24 +1,22 @@
-.main-row > * {
-    margin: auto;
+.progress-container {
+    padding: 16px 0;
 }
 
-.generator-container {
-    text-align: center;
-    padding-top: 30px;
+.big-generate-button {
+    width: 100%;
+    min-height: 2em;
+    font-size: 4rem;
+    border-radius: 16px;
+    margin-top: 16px;
+}
+
+.main-row > * {
+    margin: auto;
 }
 
 .progress-text {
     margin-top: 0;
     text-align: center;
-}
-
-.about-container {
-    margin-top: 20px;
-}
-
-.about {
-    float: right;
-    clear: both;
 }
 
 .progress-transition-leave {
@@ -32,12 +30,6 @@
     transition: opacity 500ms ease-in-out 200ms, height 500ms ease-in-out 500ms;
 }
 
-.twitter-timeline-title {
-    max-width: 520px;
-    margin: 20px auto 10px auto;
-    text-align: left;
-}
-
 @media not screen and (min-width: 1200px) {
     .twitter-timeline-row {
         margin-top: 20px;
@@ -47,9 +39,7 @@
 
 @media screen and (min-width: 768px) {
     .options-container {
-        min-height: 392px;
-        border-left: 1px solid #ddd;
-        padding-left: 25px;
+        padding-left: 16px;
     }
 }
 
@@ -57,10 +47,5 @@
     .generator-container {
         text-align: center;
         padding-top: 20px;
-        padding-bottom: 40px;
-    }
-
-    .options-container {
-        border-top: 1px solid #ddd;
     }
 }

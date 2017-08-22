@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
+import './ProgressBar.css'
 
 class ProgressBar extends Component {
+
     render() {
+        console.log("render", this.props);
         return (
             <div className="progress" style={{marginBottom: 10}}>
-                <div className="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow={this.props.value} aria-valuemin="0" aria-valuemax="100" style={{width: this.props.value + '%'}}>
-                    <span className="sr-only">{this.props.value}% Complete</span>
+                <div className="progress-bar" role="progressbar" style={{width: this.props.value + '%'}}>
                 </div>
             </div>
         );

@@ -108,15 +108,6 @@ class Options extends Component {
         );
     }
 
-    renderNoiseSelector() {
-        return (
-            <div className="col-xs-6 col-sm-4 option">
-                {this.renderLabel('noise')}
-                <NoiseSelector value={this.props.inputs.noise.random ? 0 : 1} onChange={(value) => this.props.onChange('noise', value === 0, this.props.inputs.noise.value)} />
-            </div>
-        );
-    }
-
     renderSelector(key) {
         var option = this.options[key];
         if (option.type === 'multiple') {
@@ -127,33 +118,11 @@ class Options extends Component {
         }
     }
 
-    renderNoiseVisualizer() {
-        return (
-            <div className="col-xs-6 col-sm-4 option">
-                <h5>Current Noise</h5>
-                <NoiseVisualizer noise={this.props.inputs.noise.value} />
-            </div>
-        );
-    }
-
-    renderNoiseImportExport() {
-        return (
-            <div className="col-xs-6 col-sm-4 option">
-                <h5>Noise Import/Export</h5>
-                {new ButtonGroup().renderButtonGroup([
-                    {name: 'Import', onClick: () => this.onNoiseImportClick()},
-                    {name: 'Export', onClick: () => this.onNoiseExportClick()}
-                ])}
-                <input type="file" accept="image/*" ref="noiseUploader" style={{display: "none"}} onChange={(event) => this.readNoise(event)} onClick={(event)=> {event.target.value = null}} />
-            </div>
-        )
-    }
-
     render() {
         return (
             <div className="options">
                 <div className="row">
-                    <h3 className="col-xs-12" style={{color: Config.colors.theme}}>Options</h3>
+                    <h3 className="col-xs-12" style={{color: Config.colors.themeStrongText}}>Options</h3>
                 </div>
                 <div className="row">
                     {this.renderSelector('hair_color')}
@@ -167,11 +136,6 @@ class Options extends Component {
                     {this.renderSelector('hat')}
                     {this.renderSelector('ribbon')}
                     {this.renderSelector('glasses')}
-                </div>
-                <div className="row">
-                    {this.renderNoiseSelector()}
-                    {this.props.inputs.noise.value && this.renderNoiseVisualizer()}
-                    {this.renderNoiseImportExport()}
                 </div>
 
                 <PromptDialog type="alert" ref={dialog => this.alertDialog = dialog} />

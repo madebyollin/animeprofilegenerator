@@ -11,4 +11,5 @@
 
 .multiple-selector .dropdown-menu {
     width: 100%;
+    cursor: pointer;
 }

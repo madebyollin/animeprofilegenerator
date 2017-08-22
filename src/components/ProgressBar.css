@@ -1,0 +1,17 @@
+.progress {
+    background: #3B4664;
+    height: 64px;
+    border-radius: 16px;
+    position: relative;
+    width: 100%;
+}
+
+.progress-bar {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    left: 0;
+    top: 0;
+    background: red;
+    z-index: 10;
+}

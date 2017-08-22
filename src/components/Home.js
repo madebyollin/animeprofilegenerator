@@ -3,10 +3,13 @@ import { Switch, Route } from 'react-router-dom';
 import { CSSTransitionGroup } from 'react-transition-group';
 import Config from '../Config';
 import ProgressBar from './ProgressBar';
-import Generator from './Generator';
 import Options from './Options';
 import PromptDialog from './PromptDialog';
+import ButtonStepper from './ButtonStepper';
+import ButtonPrimary from './ButtonPrimary';
+import Result from './Result';
 import GAN from '../utils/GAN';
+import Generated from "./Generated"
 import Utils from '../utils/Utils';
 import ImageEncoder from '../utils/ImageEncoder';
 import './Home.css';
@@ -69,10 +72,7 @@ class Home extends Component {
         }
 
         try {
-            var startTime = new Date();
             await this.gan.init((current, total) => this.setState({gan: Object.assign({}, this.state.gan, {loadingProgress: current / total * 100})}));
-            var endTime = new Date();
-            var loadTime = (endTime.getTime() - startTime.getTime()) / 1000;
         }
         catch (err) {
             this.setState({gan: Object.assign({}, this.state.gan, {isError: true})});
@@ -149,21 +149,38 @@ class Home extends Component {
         return noise;
     }
 
-    async generate() {
+    async generate(count) {
+        console.log("Calling generate ", count);
         this.setState({
             gan: Object.assign({}, this.state.gan, {isRunning: true})
         });
 
-        for (var i = 0; i < this.state.options.amount; i++) {
-            var optionInputs = this.getRandomOptionValues(this.state.options);
-            var label = this.getLabel(optionInputs);
-            var noise = this.getNoise(optionInputs);
-            var result = await this.gan.run(label, noise);
-            var results = i === 0 ? [result] : this.state.results.concat([result]);
+        var results = this.state.results.concat([]);
+        var startIndex = results.length;
+        for (var i = 0; i < count; i++) {
+            let result = new Result();
+            results.push(result);
+        }
+        this.setState({
+            results: results
+        });
+
+        var hash = (arr) => {
+            console.log(arr)
+            return arr && arr.slice(0, 128).join("").slice(0,128);
+        }
+
+        for (var i = 0; i < count; i++) {
+            console.log("Generating image", i);
+            let optionInputs = this.getRandomOptionValues(this.state.options);
+            let label = this.getLabel(optionInputs);
+            let noise = this.getNoise(optionInputs);
+            let result = await this.gan.run(label, noise);
+            result = result.slice();
+            results[startIndex + i] = new Result({label: label, noise: noise, rawImage: result});
             this.setState({
                 options: optionInputs,
                 results: results,
-                rating: 0,
                 gan: Object.assign({}, this.state.gan, {noise: noise, noiseOrigin: optionInputs.noise.value, input: noise.concat(label)})
             });
         }
@@ -193,11 +210,6 @@ class Home extends Component {
         }
     }
 
-
-    submitRating(value) {
-        this.setState({rating: value});
-    }
-
     render() {
         return (
             <div className="home">
@@ -213,7 +225,7 @@ class Home extends Component {
                                 {!this.state.gan.isReady &&
                                 <div className="col-xs-12">
                                     <ProgressBar value={this.state.gan.loadingProgress} />
-                                    <h5 className="progress-text" style={{color: this.state.gan.isCanceled || this.state.gan.isError ? '#f00' : '#000'}}>
+                                    <h5 className="progress-text" style={{color: this.state.gan.isCanceled || this.state.gan.isError ? '#EB32A7' : '#FFF'}}>
                                         {this.state.gan.isCanceled ? 'Canceled' : this.state.gan.isError ? 'Network Error' : 'Loading Model...'}
                                     </h5>
                                 </div>
@@ -223,13 +235,19 @@ class Home extends Component {
                         </div>
 
                         <div className="row">
-                            <div className="col-sm-3 col-xs-12 generator-container">
-                                <Generator gan={this.state.gan}
-                                           results={this.state.results}
-                                           onGenerateClick={() => this.generate()}
-                                />
-                            </div>
-                            <div className="col-sm-9 col-xs-12 options-container">
+                            <ButtonStepper
+                                className={"big-generate-button"}
+                                text={`Generate # Image$`}
+                                disabled={this.state.gan.isRunning || !this.state.gan.isReady}
+                                min={1}
+                                max={1000}
+                                step={1}
+                                value={5}
+                                onClick={(n) => this.generate(n)} />
+                        </div>
+
+                        <div className="row">
+                            <div className="col-xs-12 options-container">
                                 <Switch>
                                     <Route exact path="/" render={() =>
                                         <Options
@@ -241,19 +259,34 @@ class Home extends Component {
 
                             </div>
                         </div>
-                    </div>
+                        <div className="row">
+                            <CSSTransitionGroup
+                                transitionName="progress-transition"
+                                transitionEnterTimeout={500}
+                                transitionLeaveTimeout={1000}>
 
+                                {this.state.gan.isReady &&
+                                    <Generated
+                                        className={"generated-wrapper"}
+                                        results={this.state.results}
+                                        clear={() => this.setState({results: []})}
+                                    />
+                                }
+
+                            </CSSTransitionGroup>
+                        </div>
+                    </div>
                 </div>
 
                 <PromptDialog
                     ref={cellularDialog => this.cellularDialog = cellularDialog}
                     title="Cellular Data Warning"
-                    message="You are using a mobile data network.  This site loads a large (4MB) model file. Are you sure to continue?" />
+                    message="You are using a mobile data network.  This site loads a large (4MB) model file. Are you sure you want to continue?" />
 
                 <PromptDialog
                     ref={browserDialog => this.browserDialog = browserDialog}
                     title="Browser Warning"
-                    message="This site will run substantially faster (~20x) in a browser that supports WebGPU.  We recommend using Safari Technical Preview on macOS, with WebGPU Enabled. Are you sure to continue?" />
+                    message="This site will run substantially faster (~20x) in a browser that supports WebGPU.  We recommend using Safari Technical Preview on macOS, with WebGPU Enabled. Are you sure you want to continue?" />
             </div>
         );
     }

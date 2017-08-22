@@ -6,11 +6,9 @@ class ButtonGroup extends Component {
     renderButton(props) {
         var style = {
             outline: 0,
-
             active: {
                 backgroundColor: Config.colors.theme,
                 color: '#fff',
-                boxShadow: 'inset 0 3px 5px rgba(0, 0, 0, .125)',
             }
         };
 
