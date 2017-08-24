@@ -150,7 +150,6 @@ class Home extends Component {
     }
 
     async generate(count) {
-        console.log("Calling generate ", count);
         this.setState({
             gan: Object.assign({}, this.state.gan, {isRunning: true})
         });
@@ -171,7 +170,6 @@ class Home extends Component {
         }
 
         for (var i = 0; i < count; i++) {
-            console.log("Generating image", i);
             let optionInputs = this.getRandomOptionValues(this.state.options);
             let label = this.getLabel(optionInputs);
             let noise = this.getNoise(optionInputs);
@@ -208,6 +206,10 @@ class Home extends Component {
                 })
             });
         }
+    }
+
+    onClearResults() {
+        this.setState({results: []});
     }
 
     render() {
@@ -269,7 +271,7 @@ class Home extends Component {
                                     <Generated
                                         className={"generated-wrapper"}
                                         results={this.state.results}
-                                        clear={() => this.setState({results: []})}
+                                        clear={() => this.onClearResults()}
                                     />
                                 }
 
