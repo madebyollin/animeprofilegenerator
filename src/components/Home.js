@@ -168,7 +168,6 @@ class Home extends Component {
         });
 
         var hash = (arr) => {
-            console.log(arr)
             return arr && arr.slice(0, 128).join("").slice(0,128);
         }
 
@@ -220,7 +219,6 @@ class Home extends Component {
     }
 
     async onAnimate() {
-        console.log("onAnimate called");
         let start = this.state.results[this.state.selection[1]];
         let end = this.state.results[this.state.selection[0]];
         let n = this.state.options.animLength;
@@ -230,9 +228,6 @@ class Home extends Component {
             quality: 10,
             workerScript: "./GifWorker.js"
         });
-
-        console.log("Trying to read from ./GifWorker.js");
-        console.log(new Worker("./GifWorker.js"));
 
         let frameStack = [];
 
@@ -289,7 +284,6 @@ class Home extends Component {
         let self = this;
 
         gif.on('finished', function(blob) {
-            console.log("Gif almost finished");
             let results = self.state.results.slice();
             let result = new Result({
                 options: interpolate(start.props.options, end.props.options, 0.5),
@@ -298,9 +292,7 @@ class Home extends Component {
             });
             results.push(result);
             self.setState({results: results});
-            console.log("Gif finished");
         });
-        console.log("Starting gif render");
         gif.render();
     }
 
