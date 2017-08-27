@@ -10,6 +10,7 @@ import ButtonPrimary from './ButtonPrimary';
 import Result from './Result';
 import GAN from '../utils/GAN';
 import Generated from "./Generated"
+import GIF from './Gif'
 import Utils from '../utils/Utils';
 import ImageEncoder from '../utils/ImageEncoder';
 import './Home.css';
@@ -27,11 +28,13 @@ class Home extends Component {
                 isError: false
             },
             options: {
-                amount: 1
+                amount: 1,
+                animLength: 20
             },
             results: [],
             rating: 0,
-            mode: 'normal'
+            mode: 'normal',
+            selection: []
         };
         this.initOptions(this.state);
         this.gan = new GAN();
@@ -175,7 +178,7 @@ class Home extends Component {
             let noise = this.getNoise(optionInputs);
             let result = await this.gan.run(label, noise);
             result = result.slice();
-            results[startIndex + i] = new Result({label: label, noise: noise, rawImage: result});
+            results[startIndex + i] = new Result({options: optionInputs, noise: noise, rawImage: result});
             this.setState({
                 options: optionInputs,
                 results: results,
@@ -209,7 +212,96 @@ class Home extends Component {
     }
 
     onClearResults() {
-        this.setState({results: []});
+        this.setState({results: [], selection: []});
+    }
+
+    onSelect(idx) {
+        this.setState({selection: [idx].concat(this.state.selection).slice(0, 2)})
+    }
+
+    async onAnimate() {
+        console.log("onAnimate called");
+        let start = this.state.results[this.state.selection[1]];
+        let end = this.state.results[this.state.selection[0]];
+        let n = this.state.options.animLength;
+
+        let gif = new GIF({
+            workers: 2,
+            quality: 10,
+            workerScript: "./GifWorker.js"
+        });
+
+        console.log("Trying to read from ./GifWorker.js");
+        console.log(new Worker("./GifWorker.js"));
+
+        let frameStack = [];
+
+        let addFrame = (frame) => {
+            frameStack.push(frame);
+        }
+
+        let interpolate = (a, b, mix) => {
+            if (!(0 <= mix && mix <= 1)) {
+                console.error("Invalid parameters to interpolate", mix);
+            }
+            let result;
+            if (typeof a === "number" && typeof b === "number") {
+                result = mix * b + (1 - mix) * a;
+            } else if (a === b) {
+                result = a;
+            } else if (Array.isArray(a) && Array.isArray(b) ) {
+                result = a.map((x, i) => {
+                    return interpolate(a[i], b[i], mix);
+                });
+            } else if (typeof a === "object") {
+                result = {};
+                for (let key in a) {
+                    result[key] = interpolate(a[key], b[key], mix);
+                }
+            }
+            return result;
+        }
+
+        // Quarter-sinusoid with unit domain and range
+        let smoothCurve = (x) => Math.sin(x * Math.PI - Math.PI/2)/2 + 0.5;;
+
+        for (var i = 0; i < n; i++) {
+            let mixFactor = smoothCurve(i / (n - 1));
+            let options = interpolate(start.props.options, end.props.options, mixFactor);
+            let label = this.getLabel(options);
+            let noise = interpolate(start.props.noise, end.props.noise, mixFactor);
+            let result = await this.gan.run(label, noise);
+            result = result.slice();
+            let img = document.createElement("img");
+            img.src = ImageEncoder.encode(result);
+            addFrame(img);
+        }
+
+        for (let i = frameStack.length - 2; i >= 0; i--) {
+            addFrame(frameStack[i])
+        }
+
+        for (let i = 0; i < frameStack.length; i++) {
+            let img = frameStack[i];
+            gif.addFrame(img, {delay: 15});
+        }
+
+        let self = this;
+
+        gif.on('finished', function(blob) {
+            console.log("Gif almost finished");
+            let results = self.state.results.slice();
+            let result = new Result({
+                options: interpolate(start.props.options, end.props.options, 0.5),
+                noise: interpolate(start.props.noise, end.props.noise, 0.5),
+                dataURL: window.URL.createObjectURL(blob)
+            });
+            results.push(result);
+            self.setState({results: results});
+            console.log("Gif finished");
+        });
+        console.log("Starting gif render");
+        gif.render();
     }
 
     render() {
@@ -271,7 +363,10 @@ class Home extends Component {
                                     <Generated
                                         className={"generated-wrapper"}
                                         results={this.state.results}
+                                        selection={this.state.selection}
                                         clear={() => this.onClearResults()}
+                                        select={(i) => this.onSelect(i)}
+                                        animate={(i, j) => this.onAnimate(i, j)}
                                     />
                                 }
 

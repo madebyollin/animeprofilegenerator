@@ -11,9 +11,16 @@
     display: inline-block;
 }
 
-.generated-button {
+.clear-button {
+    margin: 0;
     float: right;
     background-color: #EB32A7 !important;
+}
+
+.animate-button {
+    margin: 0 8px;
+    float: right;
+    background-color: #378DFF !important;
 }
 
 .image-list {
@@ -27,4 +34,32 @@
     vertical-align: top;
     width: 128px;
     height: 128px;
+    box-sizing: border-box;
+    transition: transform 0.1s ease;
+}
+
+.selection {
+    width: 112px;
+    height: 112px;
+    overflow: hidden;
+    border: 8px solid black;
+}
+
+.selection .result {
+    margin-top: -8px;
+    margin-left: -8px;
+}
+
+.selectA {
+    border-color: #F776C9;
+}
+
+.selectB {
+    border-color: #378DFF;
+}
+
+.image-list li:hover {
+    transform: scale(1.05);
+    z-index: 100;
+    box-shadow: 0px 8px 32px -16px black;
 }

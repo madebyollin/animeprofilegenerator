@@ -11,6 +11,7 @@ class Result extends Component {
     }
 
     render() {
+        var dataURL = this.props.dataURL;
         if (this.props.rawImage) {
             var dataURL = ImageEncoder.encode(this.props.rawImage);
         }

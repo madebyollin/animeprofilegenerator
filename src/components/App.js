@@ -13,11 +13,7 @@ class App extends Component {
         return (
             <div className="App">
                 <div className="main-content">
-                    <Switch>
-                        <Route path="/(|about|news|tips)" render={() =>
-                            <Home onTimelineLoad={() => this.onTimelineLoad()} />
-                        }/>
-                    </Switch>
+                    <Home onTimelineLoad={() => this.onTimelineLoad()} />
                 </div>
             </div>
         );
