@@ -11,15 +11,21 @@
     display: inline-block;
 }
 
-.clear-button {
+.generated-wrapper .button {
     margin: 0;
+    margin-left: 8px;
     float: right;
+}
+
+.clearButton {
     background-color: #EB32A7 !important;
 }
 
-.animate-button {
-    margin: 0 8px;
-    float: right;
+.animateButton {
+    background-color: #378DFF !important;
+}
+
+.variationsButton {
     background-color: #378DFF !important;
 }
 

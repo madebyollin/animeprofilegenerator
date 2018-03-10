@@ -6,7 +6,6 @@ import ProgressBar from './ProgressBar';
 import Options from './Options';
 import PromptDialog from './PromptDialog';
 import ButtonStepper from './ButtonStepper';
-import ButtonPrimary from './ButtonPrimary';
 import Result from './Result';
 import GAN from '../utils/GAN';
 import Generated from "./Generated"
@@ -28,8 +27,6 @@ class Home extends Component {
                 isError: false
             },
             options: {
-                amount: 1,
-                animLength: 20
             },
             results: [],
             rating: 0,
@@ -159,7 +156,7 @@ class Home extends Component {
 
         var results = this.state.results.concat([]);
         var startIndex = results.length;
-        for (var i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             let result = new Result();
             results.push(result);
         }
@@ -167,11 +164,7 @@ class Home extends Component {
             results: results
         });
 
-        var hash = (arr) => {
-            return arr && arr.slice(0, 128).join("").slice(0,128);
-        }
-
-        for (var i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             let optionInputs = this.getRandomOptionValues(this.state.options);
             let label = this.getLabel(optionInputs);
             let noise = this.getNoise(optionInputs);
@@ -179,9 +172,7 @@ class Home extends Component {
             result = result.slice();
             results[startIndex + i] = new Result({options: optionInputs, noise: noise, rawImage: result});
             this.setState({
-                options: optionInputs,
-                results: results,
-                gan: Object.assign({}, this.state.gan, {noise: noise, noiseOrigin: optionInputs.noise.value, input: noise.concat(label)})
+                results: results
             });
         }
 
@@ -215,13 +206,86 @@ class Home extends Component {
     }
 
     onSelect(idx) {
-        this.setState({selection: [idx].concat(this.state.selection).slice(0, 2)})
+        if (idx !== this.state.selection[0]) {
+            this.setState({selection: [idx].concat(this.state.selection).slice(0, 2)})
+        }
     }
 
-    async onAnimate() {
-        let start = this.state.results[this.state.selection[1]];
-        let end = this.state.results[this.state.selection[0]];
-        let n = this.state.options.animLength;
+    interpolate(a, b, mix) {
+        if (!(0 <= mix && mix <= 1)) {
+            console.error("Invalid parameters to interpolate", mix);
+        }
+        let result;
+        if (typeof a === "number" && typeof b === "number") {
+            result = mix * b + (1 - mix) * a;
+        } else if (a === b) {
+            result = a;
+        } else if (Array.isArray(a) && Array.isArray(b) ) {
+            result = a.map((x, i) => {
+                return this.interpolate(a[i], b[i], mix);
+            });
+        } else if (typeof a === "object") {
+            result = {};
+            for (let key in a) {
+                result[key] = this.interpolate(a[key], b[key], mix);
+            }
+        }
+        return result;
+    }
+
+    async onGenerateVariations() {
+        let count = 5;
+        this.setState({
+            gan: Object.assign({}, this.state.gan, {isRunning: true})
+        });
+        let start = this.state.results[this.state.selection[0]];
+
+        var results = this.state.results.concat([]);
+        var startIndex = results.length;
+        for (let i = 0; i < count; i++) {
+            let result = new Result();
+            results.push(result);
+        }
+        this.setState({
+            results: results
+        });
+
+        for (let i = 0; i < count; i++) {
+            let optionInputs = this.interpolate(start.props.options, this.getRandomOptionValues({}), 0.5);
+            let label = this.getLabel(optionInputs);
+            // Randomize 1/4 of the noise channels
+            let noise = start.props.noise.map(x => Math.random() < 0.25 ? Math.random() : x);
+            let result = await this.gan.run(label, noise);
+            result = result.slice();
+            results[startIndex + i] = new Result({options: optionInputs, noise: noise, rawImage: result});
+            console.log("Added result", results[startIndex + i]);
+            this.setState({
+                results: results,
+            });
+        }
+
+        this.setState({
+            gan: Object.assign({}, this.state.gan, {isRunning: false}),
+        });
+    }
+
+    async onAnimate(time, start = this.state.results[this.state.selection[1]], end = this.state.results[this.state.selection[0]]) {
+        console.log("Got request to animate with time", time);
+        let msPerFrame = 15;
+        let msTotal = time * 1000;
+        let approxTotalFrames = msTotal / msPerFrame;
+        let n =  Math.round((1 + approxTotalFrames) / 2);
+
+        let results = this.state.results.slice();
+        let result = new Result();
+        results.push(result);
+
+        console.log("Starting animation of", n, "frames");
+
+        this.setState({
+            results: results,
+            gan: Object.assign({}, this.state.gan, {isRunning: true})
+        });
 
         let gif = new GIF({
             workers: 2,
@@ -235,36 +299,14 @@ class Home extends Component {
             frameStack.push(frame);
         }
 
-        let interpolate = (a, b, mix) => {
-            if (!(0 <= mix && mix <= 1)) {
-                console.error("Invalid parameters to interpolate", mix);
-            }
-            let result;
-            if (typeof a === "number" && typeof b === "number") {
-                result = mix * b + (1 - mix) * a;
-            } else if (a === b) {
-                result = a;
-            } else if (Array.isArray(a) && Array.isArray(b) ) {
-                result = a.map((x, i) => {
-                    return interpolate(a[i], b[i], mix);
-                });
-            } else if (typeof a === "object") {
-                result = {};
-                for (let key in a) {
-                    result[key] = interpolate(a[key], b[key], mix);
-                }
-            }
-            return result;
-        }
-
         // Quarter-sinusoid with unit domain and range
         let smoothCurve = (x) => Math.sin(x * Math.PI - Math.PI/2)/2 + 0.5;;
 
         for (var i = 0; i < n; i++) {
             let mixFactor = smoothCurve(i / (n - 1));
-            let options = interpolate(start.props.options, end.props.options, mixFactor);
+            let options = this.interpolate(start.props.options, end.props.options, mixFactor);
             let label = this.getLabel(options);
-            let noise = interpolate(start.props.noise, end.props.noise, mixFactor);
+            let noise = this.interpolate(start.props.noise, end.props.noise, mixFactor);
             let result = await this.gan.run(label, noise);
             result = result.slice();
             let img = document.createElement("img");
@@ -278,21 +320,26 @@ class Home extends Component {
 
         for (let i = 0; i < frameStack.length; i++) {
             let img = frameStack[i];
-            gif.addFrame(img, {delay: 15});
+            gif.addFrame(img, {delay: msPerFrame});
         }
 
         let self = this;
 
         gif.on('finished', function(blob) {
-            let results = self.state.results.slice();
             let result = new Result({
-                options: interpolate(start.props.options, end.props.options, 0.5),
-                noise: interpolate(start.props.noise, end.props.noise, 0.5),
+                options: self.interpolate(start.props.options, end.props.options, 0.5),
+                noise: self.interpolate(start.props.noise, end.props.noise, 0.5),
                 dataURL: window.URL.createObjectURL(blob)
             });
-            results.push(result);
-            self.setState({results: results});
+            results[results.length - 1] = result;
+            self.setState({
+                results: results,
+                gan: Object.assign({}, self.state.gan, {isRunning: false})
+            });
         });
+        if (frameStack.length <=1) {
+            console.error("Can't generate a gif with no frames...");
+        }
         gif.render();
     }
 
@@ -329,6 +376,7 @@ class Home extends Component {
                                 max={1000}
                                 step={1}
                                 value={5}
+                                width={3}
                                 onClick={(n) => this.generate(n)} />
                         </div>
 
@@ -358,7 +406,8 @@ class Home extends Component {
                                         selection={this.state.selection}
                                         clear={() => this.onClearResults()}
                                         select={(i) => this.onSelect(i)}
-                                        animate={(i, j) => this.onAnimate(i, j)}
+                                        animate={(n) => this.onAnimate(n)}
+                                        variations={() => this.onGenerateVariations()}
                                     />
                                 }
 

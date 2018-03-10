@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Config from '../Config';
 import './Result.css';
 import ImageEncoder from '../utils/ImageEncoder';
 
@@ -13,7 +12,7 @@ class Result extends Component {
     render() {
         var dataURL = this.props.dataURL;
         if (this.props.rawImage) {
-            var dataURL = ImageEncoder.encode(this.props.rawImage);
+            dataURL = ImageEncoder.encode(this.props.rawImage);
         }
         if (dataURL) {
             return (

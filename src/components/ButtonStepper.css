@@ -5,8 +5,15 @@
     font-size: inherit;
     border: none;
     padding: 0 0.25em;
-    margin: 0 0.25em;
     border-radius: 16px;
+    text-align: right;
+}
+
+.button-stepper::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+.button-stepper::-webkit-outer-spin-button {
+    -webkit-appearance: none;
 }
 
 .btn-stepper:active {

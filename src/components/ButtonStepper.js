@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import ButtonPrimary from './ButtonPrimary';
 import "./ButtonStepper.css";
 import Config from '../Config';
@@ -20,9 +20,9 @@ class ButtonStepper extends ButtonPrimary {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        return nextProps.disable != this.props.disabled ||
-        (this.nextState.value != 1 && this.state.value == 1) ||
-        (("" + this.nextState.value).length != ("" + this.state.value).length);
+        return nextProps.disable !== this.props.disabled ||
+        (this.nextState.value !== 1 && this.state.value === 1) ||
+        (("" + this.nextState.value).length !== ("" + this.state.value).length);
     }
     // Props:
     // className, disabled, onClick (like a normal button)
@@ -44,11 +44,11 @@ class ButtonStepper extends ButtonPrimary {
         };
 
         var inputStyle = {
-            width: (("" + this.state.value).length + 0.75) + "em"
+            width: this.props.width + "em"
         }
 
         var input = (<input onClick={this.handleChildClick} style={inputStyle} className="button-stepper" type="number" min={this.props.min || 1} max={this.props.max || 10} onChange={this.handleChange} value={this.state.value} step={this.props.step || 1}></input>);
-        var text = this.props.text.replace("$", this.state.value == 1 ? "" : "s");
+        var text = this.props.text.replace("$", this.state.value === 1 ? "" : "s");
 
         var textSplit = text.split("#");
         var textFirst = textSplit[0] || "";

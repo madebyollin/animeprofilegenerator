@@ -24,8 +24,7 @@ var Config = {
             options: ['long_hair', 'short_hair', 'twin_tail',  'drill_hair', 'ponytail'],
             offset: 13,
             prob: [0.52989922,  0.37101264,  0.12567589,  0.00291153,  0.00847864],
-            isIndependent: true,
-            prob: Array.apply(null, {length: 5}).fill(0.25)
+            isIndependent: true
         },
         {
             key: 'eye_color',
@@ -44,7 +43,7 @@ var Config = {
         {
             key: 'smile',
             type: 'binary',
-            offset: 19            ,
+            offset: 19,
             prob: 0.6
         },
         {
@@ -80,12 +79,11 @@ var Config = {
         model: '/models/model_resnet_with_condition_128_full_1_8bit',
         modelServers: debug ? ['localhost:3000'] : [
             {host: '106.187.49.34:8080', country: 'CN'},
-            //{host: '107.161.27.213', country: 'CN'},
             'd130f4reeykfib.cloudfront.net'
         ]
     },
     stat: {
-        enabled: debug ? false : true,
+        enabled: false,
         urlPrefix: backendUrlPrefix + '/api/stat'
     },
     twitter: {

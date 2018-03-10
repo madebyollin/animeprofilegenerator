@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ButtonPrimary from './ButtonPrimary';
+import ButtonStepper from './ButtonStepper';
 import Config from '../Config';
 import './Generated.css';
 
@@ -7,22 +8,35 @@ class Generated extends Component {
 
     render() {
         var clearButton = this.props.results.length > 0 ? <ButtonPrimary
-            className="clear-button"
+            className="clearButton button"
             disabled={false}
             text="Clear List"
             onClick={this.props.clear}
         /> : "";
         var selection = this.props.selection;
-        var animateButton = selection.length == 2 ? <ButtonPrimary
-            className="animate-button"
+        var animateButton = selection.length === 2 ? <ButtonStepper
+            className="animateButton button"
             disabled={false}
-            text="Animate Gif"
-            onClick={this.props.animate}
+            text="Animate #s Gif"
+            onClick={(n) => {this.props.animate(n)}}
+            min={0.1}
+            max={5.0}
+            step={0.1}
+            value={1.0}
+            width={2}
+        /> : "";
+
+        var variationsButton = selection.length >= 1 ? <ButtonPrimary
+            className="variationsButton button"
+            disabled={false}
+            text="Generate Variations"
+            onClick={this.props.variations}
         /> : "";
         return (
             <div className="generated-wrapper">
                 <h3 style={{color: Config.colors.themeStrongText}}>Generated Images</h3>
                 {clearButton}
+                {variationsButton}
                 {animateButton}
                 <ul className="image-list">
                     {this.props.results.map((r,i) => {
